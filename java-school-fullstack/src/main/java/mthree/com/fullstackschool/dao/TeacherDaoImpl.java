@@ -24,8 +24,18 @@ public class TeacherDaoImpl implements TeacherDao {
     public Teacher createNewTeacher(Teacher teacher) {
         //YOUR CODE STARTS HERE
 
-        final String INSERT_TEACHER = "INSERT INTO teacher(tFName, tLName, dept VALUES (?,?,?)";
-        jdbcTemplate.update(INSERT_TEACHER, teacher.getTeacherId(),teacher.getTeacherFName(),teacher.getTeacherLName(),teacher.getDept());
+        final String INSERT_TEACHER = "INSERT INTO teacher(tFName, tLName, dept) VALUES (?,?,?)";
+        GeneratedKeyHolder keyHolder = new GeneratedKeyHolder();
+
+        jdbcTemplate.update(connection -> {
+            PreparedStatement ps = connection.prepareStatement(INSERT_TEACHER, Statement.RETURN_GENERATED_KEYS);
+            ps.setString(1, teacher.getTeacherFName());
+            ps.setString(2, teacher.getTeacherLName());
+            ps.setString(3, teacher.getDept());
+            return ps;
+        }, keyHolder);
+
+        teacher.setTeacherId(keyHolder.getKey().intValue());
         return teacher;
 
         //YOUR CODE ENDS HERE
@@ -35,7 +45,7 @@ public class TeacherDaoImpl implements TeacherDao {
     public List<Teacher> getAllTeachers() {
         //YOUR CODE STARTS HERE
 
-        final String GET_ALL_TEACHERS = "SELECT * FROM teacher ";
+        final String GET_ALL_TEACHERS = "SELECT * FROM teacher";
         return jdbcTemplate.query(GET_ALL_TEACHERS, new TeacherMapper());
 
         //YOUR CODE ENDS HERE
@@ -58,8 +68,8 @@ public class TeacherDaoImpl implements TeacherDao {
     @Override
     public void updateTeacher(Teacher t) {
         //YOUR CODE STARTS HERE
-        final String UPDATE_TEACHER = "UPDATE teacher SET tFName=?, tLName=?, tdept=?";
-        jdbcTemplate.update(UPDATE_TEACHER,t.getTeacherFName(),t.getTeacherLName(), t.getDept());
+        final String UPDATE_TEACHER = "UPDATE teacher SET tFName=?, tLName=?, dept=? where tid=?";
+        jdbcTemplate.update(UPDATE_TEACHER,t.getTeacherFName(),t.getTeacherLName(), t.getDept(), t.getTeacherId());
 
         //YOUR CODE ENDS HERE
     }
